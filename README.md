@@ -10,7 +10,7 @@ allProjects {
   }
 }
 dependencies {
-  compile 'com.sughoshkumar.circular:flexiblecircularseekbar:0.1.4'
+  compile "com.github.ksughosh:PermissionsManager:${latest_version}"
 }
 ```
 
