@@ -59,7 +59,7 @@ open class PermissionFragment: Fragment(), PermissionView {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         val showRationale = permissions.all { shouldShowRequestPermissionRationale(it) }
-        onPermissionResult(requestCode, grantResults, showRationale)
+        onPermissionResult(requestCode, grantResults, !showRationale)
     }
 
 }

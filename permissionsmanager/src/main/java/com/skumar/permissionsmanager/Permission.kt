@@ -24,7 +24,7 @@ import android.os.Build
  */
 
 @TargetApi(Build.VERSION_CODES.M)
-open class Permission(val requestCode: Int) {
+open class Permission(val requestCode: Int = -10) {
     var isGranted: Boolean = false
     var hasAskedPermission: Boolean
         get() {

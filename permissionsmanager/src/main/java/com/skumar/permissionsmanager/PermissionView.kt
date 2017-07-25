@@ -47,7 +47,7 @@ interface PermissionView {
         val curPermission = currentPermission
         if (curPermission != null) {
             curPermission.isGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            curPermission.neverAskPermission = shouldShowRationale
+            curPermission.neverAskPermission = !shouldShowRationale
             curPermission.hasAskedPermission = true
             val cb = callback
             if (cb != null) {
