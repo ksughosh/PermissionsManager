@@ -1,6 +1,7 @@
 package com.skumar.permissionsmanager
 
 import android.annotation.TargetApi
+import android.app.Activity
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
@@ -11,6 +12,7 @@ import android.support.annotation.IntDef
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.util.SparseArray
+import com.loop.toolkit.kotlin.Utils.Exception.IllegalClassException
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
