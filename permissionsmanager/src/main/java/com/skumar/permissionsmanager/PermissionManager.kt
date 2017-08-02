@@ -40,9 +40,9 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
         get() {
             if (enableStore){
                 if (permissionView is PermissionActivity) {
-                    return PreferenceManager.getDefaultSharedPreferences(permissionView)
+                    return permissionView.defaultSharedPreferences
                 } else if (permissionView is PermissionFragment) {
-                    return PreferenceManager.getDefaultSharedPreferences(permissionView.context)
+                    return permissionView.context.defaultSharedPreferences
                 }
             }
             return null
@@ -78,8 +78,26 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
     val smsPermission: Observable<Permission>
         get() = askPermission(Permission.SMS)
 
-    private val DEAD_FRAGMENT = Fragment()
-    private val DEAD_ACTIVITY = PermissionActivity()
+    val allPermissionsFromManifest: Observable<Permission>
+        get() {
+            var packageManager: PackageManager? = null
+            var packageName: String? = null
+            if (permissionView is Activity || permissionView is PermissionActivity) {
+                packageManager = (permissionView as Activity).packageManager
+                packageName = (permissionView as Activity).packageName
+            } else if (permissionView is Fragment || permissionView is PermissionFragment){
+                packageManager = (permissionView as Fragment).activity.packageManager
+                packageName = (permissionView as Fragment).activity.packageName
+            }
+            if (packageManager == null || packageName == null) throw IllegalClassException (
+                    "Activity or fragment must be of type PermissionActivity or PermissionFragment")
+            val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
+            val allPermissions = Permission()
+            allPermissions.permissionArray = packageInfo.requestedPermissions
+            return askPermission(allPermissions)
+        }
+
+
     companion object {
 
         const val REQUEST_CAMERA_PERMISSION = 0
@@ -91,6 +109,7 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
         const val REQUEST_PHONE_PERMISSION = 6
         const val REQUEST_BODY_SENSOR_PERMISSION = 7
         const val REQUEST_SMS_PERMISSION = 8
+        const val REQUEST_PERMISSIONS_FROM_MANIFEST = 9
 
         @Retention(AnnotationRetention.SOURCE)
         @IntDef(REQUEST_CAMERA_PERMISSION.toLong(),
@@ -101,7 +120,8 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
                 REQUEST_STORAGE_PERMISSION.toLong(),
                 REQUEST_PHONE_PERMISSION.toLong(),
                 REQUEST_BODY_SENSOR_PERMISSION.toLong(),
-                REQUEST_SMS_PERMISSION.toLong())
+                REQUEST_SMS_PERMISSION.toLong(),
+                REQUEST_PERMISSIONS_FROM_MANIFEST.toLong())
         annotation class RequestPermission
     }
 
@@ -143,8 +163,7 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
 
     private fun assertMainThread() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            throw RuntimeException(
-                    "Cannot request permissions off the main thread.")
+            throw RuntimeException("Cannot request permissions off the main thread.")
         }
     }
 
@@ -154,15 +173,16 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
 
     fun getPermissionsFor(@RequestPermission permission: Int): Observable<Permission> {
         when (permission) {
-            REQUEST_CAMERA_PERMISSION -> return askPermission(Permission.CAMERA)
-            REQUEST_LOCATION_PERMISSION -> return askPermission(Permission.LOCATION)
-            REQUEST_MICROPHONE_PERMISSION -> return askPermission(Permission.MICROPHONE)
-            REQUEST_CALENDAR_PERMISSION -> return askPermission(Permission.CALENDAR)
-            REQUEST_CONTACTS_PERMISSION -> return askPermission(Permission.CONTACTS)
-            REQUEST_STORAGE_PERMISSION -> return askPermission(Permission.STORAGE)
-            REQUEST_PHONE_PERMISSION -> return askPermission(Permission.PHONE)
-            REQUEST_BODY_SENSOR_PERMISSION -> return askPermission(Permission.BODY_SENSOR)
-            REQUEST_SMS_PERMISSION -> return askPermission(Permission.SMS)
+            REQUEST_CAMERA_PERMISSION -> return cameraPermission
+            REQUEST_LOCATION_PERMISSION -> return locationPermission
+            REQUEST_MICROPHONE_PERMISSION -> return microphonePermission
+            REQUEST_CALENDAR_PERMISSION -> return calendarPermission
+            REQUEST_CONTACTS_PERMISSION -> return contactsPermission
+            REQUEST_STORAGE_PERMISSION -> return storagePermission
+            REQUEST_PHONE_PERMISSION -> return phonePermission
+            REQUEST_BODY_SENSOR_PERMISSION -> return bodySensorPermission
+            REQUEST_SMS_PERMISSION -> return smsPermission
+            REQUEST_PERMISSIONS_FROM_MANIFEST -> return allPermissionsFromManifest
         }
         return Observable.empty()
     }
