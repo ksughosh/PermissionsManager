@@ -1,7 +1,12 @@
 package com.skumar.permissionsmanager
 
+import android.Manifest
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import android.support.v4.app.Fragment
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 
 /**
  * @author s.kumar on 26/09/2017.
@@ -20,30 +25,21 @@ import android.support.v7.app.AppCompatActivity
  * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+class TestFragment : Fragment() {
 
-class MainActivity : AppCompatActivity() {
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater?.inflate(R.layout.fragment_test, container, false)
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // uncomment the following lines and comment
-        // the fragment transaction to get the
-        // permission request from activity
-
-//        val manager = PermissionManager(this)
-//        val permissions = Permission()
-//        permissions.permissionArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.BODY_SENSORS, Manifest.permission.CAMERA)
-//        manager.requestPermission(permissions).subscribe {perm ->
-//            Log.d("PERMISSION", "Granted: "
-//                    + perm.isGranted + "\nasked: " + perm.hasAskedPermission
-//                    + "\nnever: " + perm.neverAskPermission)
-//        }
-
-        val testFragment = TestFragment()
-        supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, testFragment)
-                .commit()
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        val manager = PermissionManager(this)
+        val permissions = Permission()
+        permissions.permissionArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.BODY_SENSORS, Manifest.permission.CAMERA)
+        manager.requestPermission(permissions).subscribe { perm ->
+            Log.d("PERMISSION", "Granted: "
+                    + perm.isGranted + "\nasked: " + perm.hasAskedPermission)
+        }
     }
 }

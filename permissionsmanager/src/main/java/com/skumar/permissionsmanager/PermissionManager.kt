@@ -1,22 +1,18 @@
 package com.skumar.permissionsmanager
 
 import android.annotation.TargetApi
-import android.app.Activity
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
-import android.preference.PreferenceManager
 import android.support.annotation.CallSuper
 import android.support.annotation.IntDef
 import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
-import android.util.SparseArray
+import android.support.v4.app.FragmentActivity
 import com.loop.toolkit.kotlin.Utils.Exception.IllegalClassException
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.lang.IllegalStateException
 
 /**
  * @author s.kumar on 18/07/2017.
@@ -37,18 +33,17 @@ import java.lang.IllegalStateException
  */
 
 @TargetApi(Build.VERSION_CODES.M)
-open class PermissionManager(val permissionView: PermissionView, private val enableStore: Boolean = false){
-    val permissionStore: SharedPreferences?
-        get() {
+open class PermissionManager(var activity: FragmentActivity, private val enableStore: Boolean = false) {
+
+    constructor(fragment: Fragment) : this(fragment.activity)
+
+    var permissionStore: SharedPreferences? =
             if (enableStore){
-                if (permissionView is PermissionActivity) {
-                    return permissionView.defaultSharedPreferences
-                } else if (permissionView is PermissionFragment) {
-                    return permissionView.context.defaultSharedPreferences
-                }
+                activity.defaultSharedPreferences
+            } else {
+                null
             }
-            return null
-        }
+
 
     val mainThread = AndroidSchedulers.mainThread()
     val newThread = Schedulers.newThread()
@@ -82,17 +77,10 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
 
     val allPermissionsFromManifest: Observable<Permission>
         get() {
-            var packageManager: PackageManager? = null
-            var packageName: String? = null
-            if (permissionView is Activity || permissionView is PermissionActivity) {
-                packageManager = (permissionView as Activity).packageManager
-                packageName = (permissionView as Activity).packageName
-            } else if (permissionView is Fragment || permissionView is PermissionFragment){
-                packageManager = (permissionView as Fragment).activity.packageManager
-                packageName = (permissionView as Fragment).activity.packageName
-            }
+            val packageManager = activity.packageManager
+            val packageName = activity.packageName
             if (packageManager == null || packageName == null) throw IllegalClassException (
-                    "Activity or fragment must be of type PermissionActivity or PermissionFragment")
+                    "Context is null or invalid package name")
             val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
             val allPermissions = Permission()
             allPermissions.permissionArray = packageInfo.requestedPermissions
@@ -101,6 +89,8 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
 
 
     companion object {
+
+        val REQUEST_PERMISSION_CODE = 123
 
         const val REQUEST_CAMERA_PERMISSION = 0
         const val REQUEST_LOCATION_PERMISSION = 1
@@ -127,40 +117,28 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
         annotation class RequestPermission
     }
 
-    @Volatile private var observerMap = SparseArray<Observable<Permission>>()
-    var neverAskPermission: Boolean = false
-
     @CallSuper protected fun askPermission(permissions: Permission): Observable<Permission> {
-        if (isPermissionGranted(permissions.getPermissionString())) {
-            permissions.isGranted = true
-            return Observable.just(permissions)
-        }
-        if (permissionView.isAskingForPermission) {
-            return Observable.empty()
-        }
-
-        val observer = Observable.create<Permission> { e ->
+        return Observable.create<Permission> { emitter ->
             assertMainThread()
-            if (permissionView.isAskingForPermission) {
-                throw IllegalStateException("Permission is already being requested!")
+            if (permissions.getPermissionString().all { activity.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }) {
+                permissions.isGranted = true
+                permissions.hasAskedPermission = false
+                emitter.onNext(permissions)
+
+            } else {
+                val permissionFragment = PermissionFragment.newInstance(permissions)
+                permissionFragment.permissionCallback = { permission ->
+                    emitter.onNext(permission)
+                    emitter.onComplete()
+                }
+
+                activity.supportFragmentManager
+                        .beginTransaction()
+                        .add(permissionFragment, PermissionFragment.TAG)
+                        .commitAllowingStateLoss()
             }
             permissions.preferences = permissionStore
-            permissionView.checkPermission(permissions, { permission ->
-                neverAskPermission = !permission.neverAskPermission
-                e.onNext(permission)
-            })
-
-        }.subscribeOn(mainThread)
-        observerMap.put(permissions.hashCode(), observer)
-        return observer
-    }
-
-    private fun isPermissionGranted(permission: Array<String>): Boolean {
-        if (permissionView is PermissionActivity) {
-            return permission.all { ContextCompat.checkSelfPermission(permissionView, it) == PackageManager.PERMISSION_GRANTED }
         }
-
-        return false
     }
 
     private fun assertMainThread() {
@@ -172,6 +150,7 @@ open class PermissionManager(val permissionView: PermissionView, private val ena
     fun requestPermission(permission: Permission): Observable<Permission> {
         return askPermission(permission)
     }
+
 
     fun getPermissionsFor(@RequestPermission permission: Int): Observable<Permission> {
         when (permission) {

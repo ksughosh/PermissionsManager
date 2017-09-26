@@ -1,6 +1,10 @@
 package com.skumar.permissionsmanager
+
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.support.v4.app.Fragment
 
 /**
@@ -21,45 +25,36 @@ import android.support.v4.app.Fragment
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @TargetApi(Build.VERSION_CODES.M)
-open class PermissionFragment: Fragment(), PermissionView {
+class PermissionFragment : Fragment() {
+    private lateinit var permission: Permission
+    var permissionCallback: ((permission: Permission) -> Unit)? = null
 
-    override var currentPermission: Permission?
-        get() = permission
-        set(value) {
-            permission = value
+    companion object {
+        val TAG = "PermissionFragment"
+        val PERMISSION_REQUEST = 1232
+        fun newInstance(permission: Permission): PermissionFragment {
+            val fragment = PermissionFragment()
+            fragment.permission = permission
+            return fragment
         }
-
-    override var callback: ((permission: Permission) -> Unit)?
-        get() = callBack
-        set(value) {
-            callBack = value
-        }
-
-    override var isAskingForPermission: Boolean
-        get() = askingPermission
-        set(value) {
-            askingPermission = value
-        }
-
-    override fun requestPermission(permissions: Array<String>, permissionS_REQUEST: Int) {
-        requestPermissions(permissions, permissionS_REQUEST)
     }
 
-    var askingPermission = false
-    var permission: Permission? = null
-    var callBack: ((permission: Permission) -> Unit)? = null
-
-
-
-    override fun onStop() {
-        isAskingForPermission = false
-        super.onStop()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestPermissions(permission.permissionArray, PERMISSION_REQUEST)
     }
-
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         val showRationale = permissions.all { shouldShowRequestPermissionRationale(it) }
-        onPermissionResult(requestCode, grantResults, !showRationale)
+        val granted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+        permission.isGranted = granted
+        permission.neverAskPermission = !showRationale
+        permission.hasAskedPermission = true
+        permissionCallback?.invoke(permission)
     }
 
+    @SuppressLint("CheckResult")
+    fun isRevoked(permission: Permission): Boolean {
+        return permission.getPermissionString().all { activity.packageManager.isPermissionRevokedByPolicy(it, activity.packageName) }
+    }
 }
