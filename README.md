@@ -15,10 +15,10 @@ dependencies {
 ```
 
 ## How to use it
-Using this library is simple. You have to extend `PermissionActivity` or `PermissionFragment` that implements the interface `PermissionView`. If you have your own inheritance for Activities or Fragments, just implement the `PermissionView` interface and provide the callbacks to methods respectively. Creative approaches would be with Dagger2 dependency injection and streamlined inheritance. Otherwise, the simple approach is:
+Using this library is simple. Initialize the `PermissionManager` in the `Activity` or `Fragment` from support-library
 
 ```kotlin
-class ExampleActivity : PermissionActivity() {
+class ExampleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -48,6 +48,11 @@ To ask custom permissions, use the `requestPermission(permission)` method in the
         }
   }
 ```
+### Change Log
+1. No more inheritance hierarchy.
+2. Direct initialization of manager from Fragment or Activity
+3. Simplified structure with callbacks
+
 # License
 The MIT License (MIT)
 
