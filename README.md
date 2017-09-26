@@ -1,5 +1,5 @@
 # Permission Manager
-This is a quick library to handle runtime permissions inline using RXJava2.
+This is a quick library to handle runtime permissions inline using RXJava2. `Supports > 14`
 
 ## Download from repository
 This library can be downloaded from repository by adding the following into Android studio gradle file.
