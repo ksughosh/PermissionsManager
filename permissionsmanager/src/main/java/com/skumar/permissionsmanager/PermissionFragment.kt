@@ -31,24 +31,44 @@ class PermissionFragment : Fragment() {
 
     companion object {
         val TAG = "PermissionFragment"
-        val PERMISSION_REQUEST = 1232
-        fun newInstance(permission: Permission): PermissionFragment {
+        val PERMISSION_REQUEST = 0x2332
+        fun newInstance(permission: Permission, callback: (permission: Permission) -> Unit): PermissionFragment {
             val fragment = PermissionFragment()
-            fragment.permission = permission
+            fragment.init(permission, callback)
             return fragment
         }
     }
 
+    private fun init(permission: Permission, callback: (permission: Permission) -> Unit) {
+        this.permission = permission
+        this.permissionCallback = callback
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestPermissions(permission.permissionArray, PERMISSION_REQUEST)
+        val arrayOfPermissions = mutableListOf<String>()
+        var rationale = false
+        permission.permissionArray.forEach {
+            if (activity.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(it)) {
+                    arrayOfPermissions.add(it)
+                } else {
+                    rationale = true
+                }
+            }
+        }
+        if (!arrayOfPermissions.isEmpty()) {
+            requestPermissions(arrayOfPermissions.toTypedArray(), PERMISSION_REQUEST)
+        } else {
+            permission.hasAskedPermission = false
+            permission.neverAskPermission = rationale
+            permission.isGranted = false
+            permissionCallback?.invoke(permission)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        val showRationale = permissions.all { shouldShowRequestPermissionRationale(it) }
-        val granted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-        permission.isGranted = granted
-        permission.neverAskPermission = !showRationale
+        permission.isGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
         permission.hasAskedPermission = true
         permissionCallback?.invoke(permission)
     }

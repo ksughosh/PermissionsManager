@@ -126,11 +126,10 @@ open class PermissionManager(var activity: FragmentActivity, private val enableS
                 emitter.onNext(permissions)
 
             } else {
-                val permissionFragment = PermissionFragment.newInstance(permissions)
-                permissionFragment.permissionCallback = { permission ->
+                val permissionFragment = PermissionFragment.newInstance(permissions, { permission ->
                     emitter.onNext(permission)
                     emitter.onComplete()
-                }
+                })
 
                 activity.supportFragmentManager
                         .beginTransaction()
@@ -149,6 +148,17 @@ open class PermissionManager(var activity: FragmentActivity, private val enableS
 
     fun requestPermission(permission: Permission): Observable<Permission> {
         return askPermission(permission)
+    }
+
+    fun requestPermissions(vararg permissions: Permission): Observable<Permission> {
+        val listOfObservables = mutableListOf<Observable<Permission>>()
+        permissions.forEach {
+            val granted = it.getPermissionString().all { string -> activity.checkSelfPermission(string) == PackageManager.PERMISSION_GRANTED }
+            if (!granted) {
+                listOfObservables.add(askPermission(it))
+            }
+        }
+        return Observable.concat(listOfObservables)
     }
 
 

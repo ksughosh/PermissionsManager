@@ -1,6 +1,5 @@
 package com.skumar.permissionsmanager
 
-import android.Manifest
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -34,12 +33,13 @@ class TestFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val manager = PermissionManager(this)
-        val permissions = Permission()
-        permissions.permissionArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.BODY_SENSORS, Manifest.permission.CAMERA)
-        manager.requestPermission(permissions).subscribe { perm ->
-            Log.d("PERMISSION", "Granted: "
-                    + perm.isGranted + "\nasked: " + perm.hasAskedPermission)
+//        requestPermissions(Permission.BODY_SENSOR, Permission.LOCATION, Permission.CAMERA).subscribe { perm->
+        manager.requestPermissions(Permission.BODY_SENSOR, Permission.LOCATION, Permission.CAMERA).subscribe { perm ->
+            Log.d("PERMISSION",
+                    "Name: ${perm.getString()}" +
+                            "\nGranted: ${perm.isGranted}" +
+                            "\nasked: ${perm.hasAskedPermission}" +
+                            "\nask never: ${perm.neverAskPermission}")
         }
     }
 }
