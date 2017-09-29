@@ -47,21 +47,17 @@ class PermissionFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val arrayOfPermissions = mutableListOf<String>()
-        var rationale = false
         permission.permissionArray.forEach {
             if (activity.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
-                if (shouldShowRequestPermissionRationale(it)) {
-                    arrayOfPermissions.add(it)
-                } else {
-                    rationale = true
-                }
+                arrayOfPermissions.add(it)
             }
         }
+
         if (!arrayOfPermissions.isEmpty()) {
             requestPermissions(arrayOfPermissions.toTypedArray(), PERMISSION_REQUEST)
         } else {
             permission.hasAskedPermission = false
-            permission.neverAskPermission = rationale
+            permission.neverAskPermission = permission.permissionArray.all { shouldShowRequestPermissionRationale(it) }
             permission.isGranted = false
             permissionCallback?.invoke(permission)
         }
