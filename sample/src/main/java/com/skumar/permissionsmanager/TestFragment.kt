@@ -32,7 +32,7 @@ class TestFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val manager = PermissionManager(this)
+        val manager = PermissionManagerImpl(this)
 //        requestPermissions(Permission.BODY_SENSOR, Permission.LOCATION, Permission.CAMERA).subscribe { perm->
         manager.requestPermissions(Permission.BODY_SENSOR, Permission.LOCATION, Permission.CAMERA).subscribe { perm ->
             Log.d("PERMISSION",

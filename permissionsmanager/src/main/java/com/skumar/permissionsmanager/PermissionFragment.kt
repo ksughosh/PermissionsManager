@@ -1,11 +1,11 @@
 package com.skumar.permissionsmanager
 
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
-import android.content.pm.PackageManager
+import android.app.Fragment
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
 
 /**
  * @author s.kumar on 18/07/2017.
@@ -26,51 +26,34 @@ import android.support.v4.app.Fragment
  */
 @TargetApi(Build.VERSION_CODES.M)
 class PermissionFragment : Fragment() {
-    private lateinit var permission: Permission
-    var permissionCallback: ((permission: Permission) -> Unit)? = null
-
-    companion object {
-        val TAG = "PermissionFragment"
-        val PERMISSION_REQUEST = 0x2332
-        fun newInstance(permission: Permission, callback: (permission: Permission) -> Unit): PermissionFragment {
-            val fragment = PermissionFragment()
-            fragment.init(permission, callback)
-            return fragment
-        }
-    }
-
-    private fun init(permission: Permission, callback: (permission: Permission) -> Unit) {
-        this.permission = permission
-        this.permissionCallback = callback
-    }
+    private lateinit var viewModel: PermissionViewModel
+    private val disposables = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val arrayOfPermissions = mutableListOf<String>()
-        permission.permissionArray.forEach {
-            if (activity.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
-                arrayOfPermissions.add(it)
-            }
-        }
 
-        if (!arrayOfPermissions.isEmpty()) {
-            requestPermissions(arrayOfPermissions.toTypedArray(), PERMISSION_REQUEST)
-        } else {
-            permission.hasAskedPermission = false
-            permission.neverAskPermission = permission.permissionArray.all { shouldShowRequestPermissionRationale(it) }
-            permission.isGranted = false
-            permissionCallback?.invoke(permission)
+        disposables += viewModel.requestPermission(this)
+                .subscribe({
+                    viewModel.permissionResponse(fragment = this, permissionRequest = it)
+                }) { viewModel.error(it) }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (!viewModel.onPermissionResult(requestCode, permissions, grantResults)) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        permission.isGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-        permission.hasAskedPermission = true
-        permissionCallback?.invoke(permission)
+    companion object {
+        const val TAG = "PermissionFragment"
+        internal fun create(viewModel: PermissionViewModel): PermissionFragment = PermissionFragment().also {
+            it.viewModel = viewModel
+        }
     }
 
-    @SuppressLint("CheckResult")
-    fun isRevoked(permission: Permission): Boolean {
-        return permission.getPermissionString().all { activity.packageManager.isPermissionRevokedByPolicy(it, activity.packageName) }
+    private operator fun CompositeDisposable.plusAssign(disposable: Disposable) {
+        add(disposable)
     }
 }
+
+

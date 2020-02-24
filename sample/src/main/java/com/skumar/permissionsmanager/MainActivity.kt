@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         // the fragment transaction to get the
         // permission request from activity
 
-//        val manager = PermissionManager(this)
+//        val manager = PermissionManagerImpl(this)
 //        val permissions = Permission()
 //        permissions.permissionArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
 //                Manifest.permission.BODY_SENSORS, Manifest.permission.CAMERA)
