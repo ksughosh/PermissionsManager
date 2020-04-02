@@ -2,14 +2,17 @@ package com.skumar.manager.manager
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import com.skumar.manager.data.PermissionResponse
 import com.skumar.manager.manager.data.PermissionContext
+import com.skumar.manager.manager.data.PermissionData
 import io.reactivex.rxjava3.core.Single
 import java.lang.ref.WeakReference
 
 interface PermissionManager {
     val allPermissionsFromManifest: Single<PermissionResponse>
     fun requestPermission(vararg permissions: String): Single<PermissionResponse>
+    fun checkPermission(vararg permissions: String): Array<PermissionData>
 
     class Builder {
         private var application: WeakReference<Application>? = null
@@ -36,7 +39,11 @@ interface PermissionManager {
                 activity != null -> PermissionContext.ActivityContext(activity!!)
                 else -> throw RuntimeException("context is not provided during initialization")
             }
-            return PermissionManagerImpl(context, enableStore)
+            val permissionStore = context.get()?.let {
+                val name = it.packageName
+                PermissionStore(sharedPreferences = it.getSharedPreferences(name, Context.MODE_PRIVATE))
+            }
+            return PermissionManagerImpl(context, permissionStore)
         }
     }
 }
