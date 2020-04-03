@@ -57,9 +57,11 @@ internal class PermissionManagerImpl constructor(
     override fun checkPermission(vararg permissions: String): Array<PermissionData> {
         val context = permissionContext.get() ?: return arrayOf()
         return permissions.map {
-            val granted = ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-            val isEnabledStore = permissionStore?.hasStoredPermission(it) ?: false
-            PermissionData(permission = it, isGranted = granted, isInStore = isEnabledStore)
+            PermissionData(
+                    permission = it,
+                    isGranted = ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED,
+                    isInStoreValue = permissionStore?.storedPermission(it)
+            ).apply { isStoreEnabled = permissionStore != null }
         }.toTypedArray()
     }
 

@@ -1,6 +1,9 @@
 package com.skumar.manager.manager
 
 import android.content.SharedPreferences
+import com.skumar.manager.data.Permission
+import com.skumar.manager.data.PermissionResponse
+import com.skumar.manager.data.PermissionResponse.*
 
 class PermissionStore(private val sharedPreferences: SharedPreferences) {
 
@@ -31,19 +34,24 @@ class PermissionStore(private val sharedPreferences: SharedPreferences) {
         return true
     }
 
-    fun hasStoredPermission(permission: String): Boolean {
-        val permissionSet = sharedPreferences.getString(grantedPermissionKey, "") ?: return false
-        return permissionSet.contains(permission)
+    fun storedPermission(permissionString: String): PermissionResponse? {
+        val permission = Permission(arrayOf(permissionString))
+        return getStoredPermissions(grantedPermissionKey)?.let { Granted(permission) }
+                ?: getStoredPermissions(deniedPermissionsKey)?.let { Denied(permission) }
+                ?: getStoredPermissions(deniedForeverPermissionKey)?.let { DeniedForever(permission) }
     }
+
 
     private fun get(key: String, permissionArray: Array<out String>): Array<out String> {
         if (sharedPreferences.contains(key)) {
-            val permissions = sharedPreferences.getString(grantedPermissionKey, "")
-                    .takeIf { !it.isNullOrBlank() } ?: return permissionArray
+            val permissions = getStoredPermissions(key) ?: return permissionArray
             return permissionArray.filter { !permissions.contains(it) }.toTypedArray()
         }
         return arrayOf()
     }
+
+    private fun getStoredPermissions(key: String): String? =
+            sharedPreferences.getString(key, "").takeIf { !it.isNullOrEmpty() }
 
     private companion object {
         const val grantedPermissionKey = "grantedPermissionKey"
