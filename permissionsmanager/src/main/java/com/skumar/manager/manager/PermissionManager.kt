@@ -25,13 +25,14 @@ import android.content.Context
 import com.skumar.manager.data.PermissionResponse
 import com.skumar.manager.manager.data.PermissionContext
 import com.skumar.manager.manager.data.PermissionData
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import java.lang.ref.WeakReference
 
 interface PermissionManager {
-    val allPermissionsFromManifest: Single<PermissionResponse>
+    val allPermissionsFromManifest: Array<String>
     fun requestPermission(vararg permissions: String): Single<PermissionResponse>
-    fun checkPermission(vararg permissions: String): Array<PermissionData>
+    fun checkPermission(vararg permissions: String): Observable<PermissionData>
 
     class Builder {
         private var application: WeakReference<Application>? = null

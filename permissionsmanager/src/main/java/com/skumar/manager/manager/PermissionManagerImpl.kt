@@ -34,6 +34,7 @@ import com.skumar.manager.manager.data.PermissionContext.ActivityContext
 import com.skumar.manager.manager.data.PermissionContext.ApplicationContext
 import com.skumar.manager.manager.data.PermissionData
 import com.skumar.manager.view.PermissionViewModelProvider
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 
 @Suppress("DEPRECATION")
@@ -43,25 +44,25 @@ internal class PermissionManagerImpl constructor(
         private val permissionStore: PermissionStore? = null
 ) : PermissionManager {
 
-    override val allPermissionsFromManifest: Single<PermissionResponse>
+    override val allPermissionsFromManifest: Array<String>
         get() {
             val packageManager = permissionContext.packageManager
             val packageName = permissionContext.packageName
             if (packageManager == null || packageName == null)
                 throw PermissionException.IllegalException("Context is null or invalid package name")
             val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
-            return askPermission(*packageInfo.requestedPermissions)
+            return packageInfo.requestedPermissions
         }
 
-    override fun checkPermission(vararg permissions: String): Array<PermissionData> {
-        val context = permissionContext.get() ?: return arrayOf()
-        return permissions.map {
+    override fun checkPermission(vararg permissions: String): Observable<PermissionData> {
+        val context = permissionContext.get() ?: return Observable.empty()
+        return Observable.fromIterable(permissions.map {
             PermissionData(
                     permission = it,
                     isGranted = ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED,
                     isInStoreValue = permissionStore?.storedPermission(it)
             ).apply { isStoreEnabled = permissionStore != null }
-        }.toTypedArray()
+        })
     }
 
     private fun askPermission(vararg permissions: String): Single<PermissionResponse> {

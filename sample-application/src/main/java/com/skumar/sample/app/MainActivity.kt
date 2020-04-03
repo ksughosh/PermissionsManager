@@ -1,6 +1,5 @@
 package com.skumar.sample.app
 
-import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -20,10 +19,7 @@ class MainActivity : AppCompatActivity() {
                 .setEnablesStore(true)
                 .build()
 
-        permissionManager.requestPermission(
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        ).subscribe(
+        permissionManager.requestPermission(*permissionManager.allPermissionsFromManifest).subscribe(
                 {
                     when (it) {
                         is Granted -> Log.d(TAG, "permission granted ${it.permissions}")
@@ -38,14 +34,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun grantedPermissionCheck() {
-        val permissionGranted = permissionManager.checkPermission(
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        permissionGranted.forEach {
+        permissionManager.checkPermission(
+                *permissionManager.allPermissionsFromManifest
+        ).subscribe {
             Log.d(TAG, "permission checked ${it.permission}, " +
                     "granted:${it.isGranted}, " +
-                    "isInStore: ${it.isInStore}"
+                    "isInStore: ${it.isInStoreValue?.type}"
             )
         }
 

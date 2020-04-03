@@ -21,10 +21,12 @@ package com.skumar.manager.data
 
 sealed class PermissionResponse {
     abstract val permissions: Array<out String>
+    abstract val type: String
 
     data class Granted internal constructor(
             private val permission: Permission
     ) : PermissionResponse() {
+        override val type: String = "Granted"
         override val permissions: Array<out String>
             get() = permission.permissionArray
     }
@@ -32,6 +34,7 @@ sealed class PermissionResponse {
     data class Denied internal constructor(
             private val permission: Permission
     ) : PermissionResponse() {
+        override val type: String = "Denied"
         override val permissions: Array<out String>
             get() = permission.permissionArray
     }
@@ -39,6 +42,7 @@ sealed class PermissionResponse {
     data class DeniedForever internal constructor(
             private val permission: Permission
     ) : PermissionResponse() {
+        override val type: String = "Denied Forever"
         override val permissions: Array<out String>
             get() = permission.permissionArray
     }
@@ -47,6 +51,7 @@ sealed class PermissionResponse {
             private val permission: Permission,
             vararg val responses: PermissionResponse
     ) : PermissionResponse() {
+        override val type: String = "Multiple Responses"
         override val permissions: Array<out String>
             get() = permission.permissionArray
     }
