@@ -1,4 +1,21 @@
-@file:Suppress("DEPRECATION")
+/*
+ * @author Sughosh on 04/03/2020.
+ *
+ * Copyright (C)  04/03/2020 Sughosh Krishna Kumar
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE SUGHOSH KRISHNA KUMAR BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 
 package com.skumar.manager.manager
 
@@ -11,31 +28,13 @@ import androidx.core.content.ContextCompat
 import com.skumar.manager.data.Permission
 import com.skumar.manager.data.PermissionResponse
 import com.skumar.manager.data.PermissionResponse.*
-import com.skumar.manager.exception.IllegalClassException
+import com.skumar.manager.exception.PermissionException
 import com.skumar.manager.manager.data.PermissionContext
 import com.skumar.manager.manager.data.PermissionContext.ActivityContext
 import com.skumar.manager.manager.data.PermissionContext.ApplicationContext
 import com.skumar.manager.manager.data.PermissionData
 import com.skumar.manager.view.PermissionViewModelProvider
 import io.reactivex.rxjava3.core.Single
-
-/**
- * @author s.kumar on 18/07/2017.
- *
- * Copyright (C)  18/07/2017 Sughosh Krishna Kumar
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
- * associated documentation files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in all copies or substantial
- * portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- * PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE SUGHOSH KRISHNA KUMAR BE LIABLE FOR ANY CLAIM, DAMAGES OR
- * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 
 @Suppress("DEPRECATION")
 @TargetApi(Build.VERSION_CODES.M)
@@ -49,7 +48,7 @@ internal class PermissionManagerImpl constructor(
             val packageManager = permissionContext.packageManager
             val packageName = permissionContext.packageName
             if (packageManager == null || packageName == null)
-                throw IllegalClassException("Context is null or invalid package name")
+                throw PermissionException.IllegalException("Context is null or invalid package name")
             val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
             return askPermission(*packageInfo.requestedPermissions)
         }
@@ -95,7 +94,9 @@ internal class PermissionManagerImpl constructor(
                         permission
                 )
             }
-        } ?: return Single.error(Throwable("failed to initialize with context, is null"))
+        } ?: return Single.error(
+                PermissionException.PermissionRequestException("supplied context reference is null")
+        )
 
         permissionContext.get()?.startActivity(intent)
         return response.permissionResponse()
