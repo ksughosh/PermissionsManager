@@ -15,43 +15,82 @@ dependencies {
 ```
 
 ## How to use it
-Using this library is simple. Initialize the `PermissionManager` in the `Activity` or `Fragment` from support-library
+Using this library is simple. Initialize the `PermissionManager` in the `Application` or `Activity`
 
 ```kotlin
-class ExampleActivity : AppCompatActivity() {
+open class BaseActivity : AppCompatActivity() {
+    protected lateinit var permissionManager: PermissionManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val manager = PermissionManager(this)
-        manager.cameraPermission.subscribe { permission ->
-            Log.d("PERMISSION", "Granted: " + permission.isGranted 
-                    + "\nis permission asked: " + permission.hasAskedPermission
-                    + "\nnever ask permission: " + permission.neverAskPermission)
-        }
+        permissionManager = PermissionManager.Builder()
+                .setApplication(application)    // or use .setActivity(this) if you don't want a singleton
+                .setEnablesStore(true)
+                .build()
+                   
+        permissionManager.requestPermission(
+            Manifest.permission.CAMERA, 
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ).subscribe (
+                {
+                  when (it) {
+                      is Granted -> Log.d(TAG, "permission granted ${it.permissions}")
+                      is Denied -> Log.d(TAG, "permission denied ${it.permissions}")
+                      is DeniedForever -> Log.d(TAG, "permission denied forever ${it.permissions}")
+                      is Mixed -> Log.d(TAG, "permission Mixed ${it.permissions} " +
+                              "with responses ${it.responses.map { it::class.java.simpleName }}")
+                  }
+                  grantedPermissionCheck()
+                }, { Log.e(TAG, "Error", it) }
+        )
     }
 }
 ```
-To ask custom permissions, use the `requestPermission(permission)` method in the `PermissionManager`. To configure your own set of permissions you can:
+To request all permissions on manifest just use `requestManifestPermission` API in the `PermissionManager`. To configure your own set of permissions you can:
 
 ```kotlin
   fun askPermission(){
-    val permissions = Permission()
-    permissions.permissionArray = 
-        arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, 
-                Manifest.permission.BODY_SENSORS, 
-                Manifest.permission.CAMERA)
-                
-        permissionManager.requestPermission(permissions).subscribe { perm ->
-            Log.d("PERMISSION", "Granted: "+ perm.isGranted 
-                    + "\nasked: " + perm.hasAskedPermission
-                    + "\nnever: " + perm.neverAskPermission)
-        }
+    permissionManager.requestManifestPermission()
+        .subscribe(
+          {
+            when (it) {
+                is Granted -> Log.d(TAG, "permission granted ${it.permissions}")
+                is Denied -> Log.d(TAG, "permission denied ${it.permissions}")
+                is DeniedForever -> Log.d(TAG, "permission denied forever ${it.permissions}")
+                is Mixed -> Log.d(TAG, "permission Mixed ${it.permissions} " +
+                        "with responses ${it.responses.map { it::class.java.simpleName }}")
+            }
+          }, { Log.e(TAG, "Error", it) }
+        )
   }
 ```
-### Change Log
-1. No more inheritance hierarchy.
-2. Direct initialization of manager from Fragment or Activity
-3. Simplified structure with callbacks
+
+__Version 2.0__ Addition was checking permission that will provide an `Observable<PermissionData>`. This can be called like:
+
+```
+  fun checkPermission() {
+        permissionManager.checkPermission(
+                *permissionManager.allManifestPermissions
+        ).subscribe { permissionData ->
+            Log.d(TAG, "permission checked ${permissionData.permission}, " +
+                    "granted:${permissionData.isGranted}, " +
+                    "isInStore: ${permissionData.isInStoreValue?.type}"
+            )
+        }
+  }
+
+```
+### Change Log V2.0
+
+- New Kotlin version port
+- RxJava 3 dependency inclusion
+- New contract functionality
+- Updated packages
+- Clear separation of classes and responsibilities
+- Store functionality to save permission result for later comparison
+- New API functions
+- Version updates
 
 # License
 The MIT License (MIT)
