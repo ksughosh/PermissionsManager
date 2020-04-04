@@ -33,6 +33,7 @@ interface PermissionManager {
     val allPermissionsFromManifest: Array<String>
     fun requestPermission(vararg permissions: String): Single<PermissionResponse>
     fun checkPermission(vararg permissions: String): Observable<PermissionData>
+    fun requestPermissionsFromManifest(): Single<PermissionResponse> = requestPermission(*allPermissionsFromManifest)
 
     class Builder {
         private var application: WeakReference<Application>? = null
