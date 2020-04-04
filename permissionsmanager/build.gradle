@@ -31,8 +31,7 @@ dependencies {
 
     implementation 'com.android.support:appcompat-v7:28.1.0'
     testImplementation 'junit:junit:4.12'
-    api 'io.reactivex.rxjava3:rxjava:3.0.0'
-    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 

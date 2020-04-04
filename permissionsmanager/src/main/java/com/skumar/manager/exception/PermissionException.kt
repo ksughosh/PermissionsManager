@@ -17,22 +17,13 @@
  *
  */
 
-package com.skumar.manager.manager.data
+package com.skumar.manager.exception
 
-import android.app.Activity
-import android.app.Application
-import android.content.Context
-import android.content.pm.PackageManager
-import java.lang.ref.WeakReference
+sealed class PermissionException(message: String? = null) : Exception(message) {
+    class IllegalException(message: String?) : PermissionException(message)
+    class PermissionRequestException(
+            reason: String? = null
+    ) : PermissionException("error with permission request because $reason")
 
-internal sealed class PermissionContext<T : Context> {
-    protected abstract val reference: WeakReference<T>
-    fun get(): T? = reference.get()
-    val packageName: String?
-        get() = get()?.packageName
-    val packageManager: PackageManager?
-        get() = get()?.packageManager
-
-    class ApplicationContext(override val reference: WeakReference<Application>) : PermissionContext<Application>()
-    class ActivityContext(override val reference: WeakReference<Activity>) : PermissionContext<Activity>()
+    object UnrecoverableError : Exception("unrecoverable error")
 }
