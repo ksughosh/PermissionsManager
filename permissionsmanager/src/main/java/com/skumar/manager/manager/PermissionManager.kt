@@ -30,10 +30,10 @@ import io.reactivex.rxjava3.core.Single
 import java.lang.ref.WeakReference
 
 interface PermissionManager {
-    val allPermissionsFromManifest: Array<String>
+    val allManifestPermissions: Array<String>
     fun requestPermission(vararg permissions: String): Single<PermissionResponse>
     fun checkPermission(vararg permissions: String): Observable<PermissionData>
-    fun requestPermissionsFromManifest(): Single<PermissionResponse> = requestPermission(*allPermissionsFromManifest)
+    fun requestManifestPermission(): Single<PermissionResponse> = requestPermission(*allManifestPermissions)
 
     class Builder {
         private var application: WeakReference<Application>? = null

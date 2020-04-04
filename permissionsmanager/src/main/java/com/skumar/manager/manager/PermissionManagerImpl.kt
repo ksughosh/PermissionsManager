@@ -44,7 +44,7 @@ internal class PermissionManagerImpl constructor(
         private val permissionStore: PermissionStore? = null
 ) : PermissionManager {
 
-    override val allPermissionsFromManifest: Array<String>
+    override val allManifestPermissions: Array<String>
         get() {
             val packageManager = permissionContext.packageManager
             val packageName = permissionContext.packageName

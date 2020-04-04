@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
                 .setEnablesStore(true)
                 .build()
 
-        permissionManager.requestPermissionsFromManifest().subscribe(
+        permissionManager.requestManifestPermission().subscribe(
                 {
                     when (it) {
                         is Granted -> Log.d(TAG, "permission granted ${it.permissions}")
@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun grantedPermissionCheck() {
         permissionManager.checkPermission(
-                *permissionManager.allPermissionsFromManifest
+                *permissionManager.allManifestPermissions
         ).subscribe {
             Log.d(TAG, "permission checked ${it.permission}, " +
                     "granted:${it.isGranted}, " +
