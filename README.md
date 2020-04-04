@@ -68,7 +68,7 @@ To request all permissions on manifest just use `requestManifestPermission` API 
 
 __Version 2.0__ Addition was checking permission that will provide an `Observable<PermissionData>`. This can be called like:
 
-```
+```kotlin
   fun checkPermission() {
         permissionManager.checkPermission(
                 *permissionManager.allManifestPermissions
