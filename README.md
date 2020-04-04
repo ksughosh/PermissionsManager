@@ -23,12 +23,13 @@ open class BaseActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         permissionManager = PermissionManager.Builder()
-                .setApplication(application)    // or use .setActivity(this) if you don't want a singleton
+                .setActivity(this)    // or use .setApplication(application) in AppClass for DI
                 .setEnablesStore(true)
-                .build()
-                   
+                .build()                   
+    }
+    
+    private fun examplePermissionRequest() {
         permissionManager.requestPermission(
             Manifest.permission.CAMERA, 
             Manifest.permission.ACCESS_FINE_LOCATION
