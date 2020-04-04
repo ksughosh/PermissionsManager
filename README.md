@@ -10,7 +10,7 @@ allProjects {
   }
 }
 dependencies {
-  compile "com.github.ksughosh:PermissionsManager:${latest_version}"
+  compile 'com.github.ksughosh:PermissionsManager:2.0'
 }
 ```
 
