@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
                 .setEnablesStore(true)
                 .build()
 
-        permissionManager.requestPermission(*permissionManager.allPermissionsFromManifest).subscribe(
+        permissionManager.requestPermissionsFromManifest().subscribe(
                 {
                     when (it) {
                         is Granted -> Log.d(TAG, "permission granted ${it.permissions}")
